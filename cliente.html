@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Contactos</title>
+    <link rel="stylesheet" href="css/styless.css">
+
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Contactos</h1>
+        <ul id="contactosList"></ul>
+        <div id="errorMessage" class="error"></div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:8000/api/contactos/'; // URL local de la API
+
+        // Verificar si el usuario está autenticado
+        if (!localStorage.getItem('access_token')) {
+            console.log('No hay token, redirigiendo...');
+            window.location.href = 'index.html';  // Redirigir al login si no está autenticado
+        } else {
+            fetchContactos();  // Solo ejecutar si el usuario está autenticado
+        }
+
+        // Función para obtener los contactos
+        async function fetchContactos() {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('access_token'), // Autenticación con el token
+                    }
+                });
+
+                // Verificar si la respuesta fue exitosa
+                if (!response.ok) {
+                    throw new Error('Error al obtener los contactos: ' + response.statusText);
+                }
+
+                const data = await response.json();
+                console.log('Datos obtenidos:', data); // Verificar los datos completos
+
+                if (data.results && data.results.length > 0) {
+                    const contactos = data.results;
+                    const contactosList = document.getElementById('contactosList');
+
+                    // Limpiar la lista antes de llenarla
+                    contactosList.innerHTML = '';
+
+                    // Crear la lista de contactos
+                    contactos.forEach(contacto => {
+                        console.log('Contacto:', contacto); // Verificar cada contacto individualmente
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = ` 
+                            <strong>${contacto.nombre}</strong> - ${contacto.correo}
+                            <span class="contacto-info">${contacto.telefono}</span>
+                            <span class="contacto-info">${contacto.direccion}</span>
+                        `;
+                        contactosList.appendChild(listItem);
+                    });
+                } else {
+                    showError('No hay contactos disponibles.');
+                }
+
+            } catch (error) {
+                console.error('Error al obtener los contactos:', error);
+                showError('Ocurrió un error al cargar los contactos.');
+            }
+        }
+
+        // Función para mostrar mensaje de error
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+        }
+    </script>
+</body>
+</html>
