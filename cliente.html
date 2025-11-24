@@ -107,7 +107,6 @@
         <table>
             <thead>
                 <tr>
-                    <th>Rut cliente</th>
                     <th>Producto</th>
                     <th>Descripción</th>
                     <th>Precio</th>
@@ -157,7 +156,6 @@
                     const row = document.createElement("tr");
 
                     row.innerHTML = `
-                        <td>${item.rut_cliente || "-"}</td>
                         <td>${item.nombre}</td>
                         <td>${item.descripcion}</td>
                         <td>$${item.precio}</td>
