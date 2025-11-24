@@ -3,34 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compras | Panel Tienda</title>
+    <title>Ventas | Panel Tienda</title>
     <link rel="stylesheet" href="css/styless.css">
 </head>
 <body>
 
     <header class="header">
-        <h1>Registro de Compras</h1>
+        <h1>Lista de Ventas</h1>
         <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
     </header>
 
     <div class="container">
-        <div id="comprasList" class="card-container"></div>
+
+        <!-- TABLA IGUAL A LA DE DJANGO -->
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">Rut cliente</th>
+                    <th class="py-2 px-4 border-b">Producto</th>
+                    <th class="py-2 px-4 border-b">Descripción</th>
+                    <th class="py-2 px-4 border-b">Precio</th>
+                    <th class="py-2 px-4 border-b">Cantidad</th>
+                </tr>
+            </thead>
+            <tbody id="ventasTable">
+            </tbody>
+        </table>
+
         <p id="errorMessage" class="error"></p>
     </div>
 
     <script>
-        // NUEVA URL PARA TU TIENDA ONLINE
-        const apiUrl = "http://127.0.0.1:8000/api/token/";
 
-        // Verifica sesión
+        // Tu API REAL DE VENTAS
+        const apiUrl = "http://127.0.0.1:8000/api/ventas/";
+
+        // Verifica login
         if (!localStorage.getItem("access_token")) {
             window.location.href = "index.html";
         } else {
-            fetchCompras();
+            fetchVentas();
         }
 
-        // Obtener datos de compras
-        async function fetchCompras() {
+        // Obtener ventas de la API
+        async function fetchVentas() {
             try {
                 const response = await fetch(apiUrl, {
                     method: "GET",
@@ -40,44 +56,42 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error("Error al obtener las compras");
+                    throw new Error("Error al obtener las ventas");
                 }
 
                 const data = await response.json();
-                const compras = data.results || [];
+                const ventas = data.results || [];
 
-                const container = document.getElementById("comprasList");
-                container.innerHTML = "";
+                const table = document.getElementById("ventasTable");
+                table.innerHTML = "";
 
-                if (compras.length === 0) {
-                    showError("No hay compras registradas todavía.");
+                if (ventas.length === 0) {
+                    showError("No hay ventas registradas.");
                     return;
                 }
 
-                // Mostrar tarjetas de compras
-                compras.forEach(compra => {
-                    const card = document.createElement("div");
-                    card.classList.add("contact-card");
+                // Igual que en Django: ventas.producto & ventas.venta
+                ventas.forEach(item => {
+                    const row = document.createElement("tr");
+                    row.classList.add("text-center");
 
-                    card.innerHTML = `
-                        <h3>Cliente: ${compra.rut_cliente}</h3>
-
-                        <p><strong>Producto:</strong> ${compra.producto}</p>
-                        <p><strong>Descripción:</strong> ${compra.descripcion}</p>
-                        <p><strong>Precio:</strong> $${compra.precio}</p>
-                        <p><strong>Cantidad:</strong> ${compra.cantidad}</p>
+                    row.innerHTML = `
+                        <td class="py-2 px-4 border-b">${item.venta.rut}</td>
+                        <td class="py-2 px-4 border-b">${item.producto.nombre}</td>
+                        <td class="py-2 px-4 border-b">${item.producto.descripcion}</td>
+                        <td class="py-2 px-4 border-b">$${item.producto.precio}</td>
+                        <td class="py-2 px-4 border-b">${item.venta.cantidad}</td>
                     `;
 
-                    container.appendChild(card);
+                    table.appendChild(row);
                 });
 
             } catch (error) {
                 console.error(error);
-                showError("Ocurrió un error al cargar las compras.");
+                showError("Error al cargar ventas.");
             }
         }
 
-        // Cerrar sesión
         function logout() {
             localStorage.removeItem("access_token");
             window.location.href = "index.html";
@@ -87,6 +101,7 @@
             const errorMessage = document.getElementById("errorMessage");
             errorMessage.textContent = msg;
         }
+
     </script>
 
 </body>
