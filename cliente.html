@@ -14,8 +14,6 @@
     </header>
 
     <div class="container">
-
-        <!-- TABLA IGUAL A LA DE DJANGO -->
         <table class="min-w-full bg-white">
             <thead>
                 <tr>
@@ -26,8 +24,7 @@
                     <th class="py-2 px-4 border-b">Cantidad</th>
                 </tr>
             </thead>
-            <tbody id="ventasTable">
-            </tbody>
+            <tbody id="ventasTable"></tbody>
         </table>
 
         <p id="errorMessage" class="error"></p>
@@ -35,17 +32,14 @@
 
     <script>
 
-        // Tu API REAL DE VENTAS
         const apiUrl = "http://127.0.0.1:8000/api/productos/";
 
-        // Verifica login
         if (!localStorage.getItem("access_token")) {
             window.location.href = "index.html";
         } else {
             fetchVentas();
         }
 
-        // Obtener ventas de la API
         async function fetchVentas() {
             try {
                 const response = await fetch(apiUrl, {
@@ -56,11 +50,11 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error("Error al obtener las ventas");
+                    throw new Error("Error al obtener los datos");
                 }
 
                 const data = await response.json();
-                const ventas = data.results || [];
+                const ventas = data.results || data; // aceptamos listas o paginación
 
                 const table = document.getElementById("ventasTable");
                 table.innerHTML = "";
@@ -70,17 +64,16 @@
                     return;
                 }
 
-                // Igual que en Django: ventas.producto & ventas.venta
                 ventas.forEach(item => {
                     const row = document.createElement("tr");
                     row.classList.add("text-center");
 
                     row.innerHTML = `
-                        <td class="py-2 px-4 border-b">${item.venta.rut}</td>
-                        <td class="py-2 px-4 border-b">${item.producto.nombre}</td>
-                        <td class="py-2 px-4 border-b">${item.producto.descripcion}</td>
-                        <td class="py-2 px-4 border-b">$${item.producto.precio}</td>
-                        <td class="py-2 px-4 border-b">${item.venta.cantidad}</td>
+                        <td class="py-2 px-4 border-b">${item.rut_cliente || "-"}</td>
+                        <td class="py-2 px-4 border-b">${item.nombre}</td>
+                        <td class="py-2 px-4 border-b">${item.descripcion}</td>
+                        <td class="py-2 px-4 border-b">$${item.precio}</td>
+                        <td class="py-2 px-4 border-b">${item.cantidad || "-"}</td>
                     `;
 
                     table.appendChild(row);
@@ -98,8 +91,7 @@
         }
 
         function showError(msg) {
-            const errorMessage = document.getElementById("errorMessage");
-            errorMessage.textContent = msg;
+            document.getElementById("errorMessage").textContent = msg;
         }
 
     </script>
