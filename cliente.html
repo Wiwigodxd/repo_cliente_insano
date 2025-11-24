@@ -3,79 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Contactos</title>
+    <title>Compras | Panel Tienda</title>
     <link rel="stylesheet" href="css/styless.css">
-
 </head>
 <body>
+
+    <header class="header">
+        <h1>Registro de Compras</h1>
+        <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+    </header>
+
     <div class="container">
-        <h1>Lista de Contactos</h1>
-        <ul id="contactosList"></ul>
-        <div id="errorMessage" class="error"></div>
+        <div id="comprasList" class="card-container"></div>
+        <p id="errorMessage" class="error"></p>
     </div>
 
     <script>
-        const apiUrl = 'http://localhost:8000/api/contactos/'; // URL local de la API
+        // NUEVA URL PARA TU TIENDA ONLINE
+        const apiUrl = "http://127.0.0.1:8000/api/productos/";
 
-        // Verificar si el usuario está autenticado
-        if (!localStorage.getItem('access_token')) {
-            console.log('No hay token, redirigiendo...');
-            window.location.href = 'index.html';  // Redirigir al login si no está autenticado
+        // Verifica sesión
+        if (!localStorage.getItem("access_token")) {
+            window.location.href = "index.html";
         } else {
-            fetchContactos();  // Solo ejecutar si el usuario está autenticado
+            fetchCompras();
         }
 
-        // Función para obtener los contactos
-        async function fetchContactos() {
+        // Obtener datos de compras
+        async function fetchCompras() {
             try {
                 const response = await fetch(apiUrl, {
-                    method: 'GET',
+                    method: "GET",
                     headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('access_token'), // Autenticación con el token
+                        "Authorization": "Bearer " + localStorage.getItem("access_token")
                     }
                 });
 
-                // Verificar si la respuesta fue exitosa
                 if (!response.ok) {
-                    throw new Error('Error al obtener los contactos: ' + response.statusText);
+                    throw new Error("Error al obtener las compras");
                 }
 
                 const data = await response.json();
-                console.log('Datos obtenidos:', data); // Verificar los datos completos
+                const compras = data.results || [];
 
-                if (data.results && data.results.length > 0) {
-                    const contactos = data.results;
-                    const contactosList = document.getElementById('contactosList');
+                const container = document.getElementById("comprasList");
+                container.innerHTML = "";
 
-                    // Limpiar la lista antes de llenarla
-                    contactosList.innerHTML = '';
-
-                    // Crear la lista de contactos
-                    contactos.forEach(contacto => {
-                        console.log('Contacto:', contacto); // Verificar cada contacto individualmente
-                        const listItem = document.createElement('li');
-                        listItem.innerHTML = ` 
-                            <strong>${contacto.nombre}</strong> - ${contacto.correo}
-                            <span class="contacto-info">${contacto.telefono}</span>
-                            <span class="contacto-info">${contacto.direccion}</span>
-                        `;
-                        contactosList.appendChild(listItem);
-                    });
-                } else {
-                    showError('No hay contactos disponibles.');
+                if (compras.length === 0) {
+                    showError("No hay compras registradas todavía.");
+                    return;
                 }
 
+                // Mostrar tarjetas de compras
+                compras.forEach(compra => {
+                    const card = document.createElement("div");
+                    card.classList.add("contact-card");
+
+                    card.innerHTML = `
+                        <h3>Cliente: ${compra.rut_cliente}</h3>
+
+                        <p><strong>Producto:</strong> ${compra.producto}</p>
+                        <p><strong>Descripción:</strong> ${compra.descripcion}</p>
+                        <p><strong>Precio:</strong> $${compra.precio}</p>
+                        <p><strong>Cantidad:</strong> ${compra.cantidad}</p>
+                    `;
+
+                    container.appendChild(card);
+                });
+
             } catch (error) {
-                console.error('Error al obtener los contactos:', error);
-                showError('Ocurrió un error al cargar los contactos.');
+                console.error(error);
+                showError("Ocurrió un error al cargar las compras.");
             }
         }
 
-        // Función para mostrar mensaje de error
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
+        // Cerrar sesión
+        function logout() {
+            localStorage.removeItem("access_token");
+            window.location.href = "index.html";
+        }
+
+        function showError(msg) {
+            const errorMessage = document.getElementById("errorMessage");
+            errorMessage.textContent = msg;
         }
     </script>
+
 </body>
 </html>
