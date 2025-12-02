@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Dark</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #0b0e14;
+            color: white;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #6c8bfd;
+            text-shadow: 0 0 10px #6c8bfd;
+        }
+
+        /* CARD CONTAINER */
+        .card-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* CARD GAMER */
+        .card {
+            background: #11151f;
+            padding: 20px;
+            border-radius: 12px;
+            width: 260px;
+            box-shadow: 0 0 10px #00ffbb55;
+            transition: 0.3s;
+            border: 1px solid #00ffbb55;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #00ffbb;
+        }
+
+        .card h3 {
+            color: #00ffbb;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+
+        .card h2 {
+            font-size: 30px;
+            margin: 0;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: #11151f;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 12px #6c8bfd55;
+        }
+
+        th {
+            background: #1a2233;
+            padding: 12px;
+            color: #6c8bfd;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #222c44;
+        }
+
+        tr:hover {
+            background: #151c2b;
+        }
+
+        /* GRAPH CARD */
+        .graph-card {
+            background: #11151f;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px #6c8bfd55;
+            border: 1px solid #6c8bfd55;
+        }
+
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+
+</head>
+<body>
+
+    <h1>Dashboard del Sistema</h1>
+
+    <!-- CARDS -->
+    <div class="card-container">
+        <div class="card">
+            <h3>Inicios de Sesión</h3>
+            <h2 id="totalSesiones">0</h2>
+        </div>
+
+        <div class="card">
+            <h3>Productos Vendidos</h3>
+            <h2 id="productosVendidos">0</h2>
+        </div>
+    </div>
+
+    <!-- GRAPH -->
+    <div class="graph-card">
+        <h2 style="color:#6c8bfd;">Productos Más Vendidos</h2>
+        <canvas id="ventasChart"></canvas>
+    </div>
+
+    <!-- TABLE -->
+    <h2 style="margin-top:25px; color:#6c8bfd;">Detalle de Ventas</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody id="tablaVentas"></tbody>
+    </table>
+
+    <script>
+        async function cargarDashboard() {
+            const token = localStorage.getItem("access_token");
+
+            const res = await fetch("http://127.0.0.1:8000/api/dashboard/", {
+                headers: { "Authorization": "Bearer " + token }
+            });
+
+            const data = await res.json();
+
+            // 1️⃣ Sesiones
+            let totalSesiones = data.sesiones.reduce((sum, s) => sum + s.total, 0);
+            document.getElementById("totalSesiones").textContent = totalSesiones;
+
+            // 2️⃣ Productos vendidos total
+            let totalProductos = data.productos.reduce((sum, p) => sum + p.total_vendido, 0);
+            document.getElementById("productosVendidos").textContent = totalProductos;
+
+            // 3️⃣ Tabla detalle
+            let tabla = document.getElementById("tablaVentas");
+            tabla.innerHTML = "";
+
+            data.detalles.forEach(d => {
+                tabla.innerHTML += `
+                    <tr>
+                        <td>${d.producto}</td>
+                        <td>${d.descripcion}</td>
+                        <td>$${d.precio}</td>
+                        <td>${d.cantidad}</td>
+                    </tr>
+                `;
+            });
+
+            // 4️⃣ Gráfica estilo dark gamer
+            const ctx = document.getElementById("ventasChart").getContext("2d");
+
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: data.productos.map(p => p["producto__nombre"]),
+                    datasets: [{
+                        label: "Cantidad Vendida",
+                        data: data.productos.map(p => p.total_vendido),
+                        backgroundColor: "rgba(108,139,253,0.7)",
+                        borderColor: "#6c8bfd",
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { labels: { color: "white" } }
+                    },
+                    scales: {
+                        x: { ticks: { color: "#6c8bfd" } },
+                        y: { ticks: { color: "#6c8bfd" } }
+                    }
+                }
+            });
+        }
+
+        cargarDashboard();
+    </script>
+
+</body>
+</html>
